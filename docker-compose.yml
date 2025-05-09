@@ -1,0 +1,16 @@
+volumes:
+  models: {}
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: mikaylaelectra/fastapi
+    container_name: fastapi
+    volumes:
+      - models:/models
+      - ./app:/code/app
+    command: fastapi run app/main.py --port 8070
+    ports:
+          - "8070:8070"
