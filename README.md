@@ -12,7 +12,17 @@ The Docker compose volume defined as `./app:/code/app` copies the app directory 
 
 ## Model deployment
 
-To get the model .pth file on the Docker container, a Docker named volume is used for better performance due to the large size of the .ppth file. Additional model config files are stored in the same location for clearer syncronicity when updating the model. These files are .gitignored
+To get the model .pth file on the Docker container, a Docker named volume is used for better performance due to the large size of the .ppth file. Additional model config files are stored in the same location for clearer syncronicity when updating the model.  Use scp to place these files into the local /models folder. These files are .gitignored.
+
+Bring the container up to copy files to the volume, then restart it
+
+Bring the container up, without attaching the terminal to it.
+
+    docker compose up -d
+
+Check the logs
+
+    docker compose logs --tail=1000 --follow
 
 To add new files to this volume, get the CONTAINER_ID
 
@@ -23,3 +33,5 @@ copy these files to the CONTAINER_ID.
     docker cp ./models/metaformer_best.pth CONTAINER_ID:/models
     docker cp ./models/metaformer_morphospecies_map.csv CONTAINER_ID:/models
     docker cp ./models/metaformer_config.yaml  CONTAINER_ID:/models
+
+Restart the docker container.

@@ -37,7 +37,11 @@ class MetaformerHandler(BaseHandler, ABC):
 
 
     def preprocess(self, image_data):
-        return Image.open(io.BytesIO(image_data))
+
+        try:
+            return Image.open(io.BytesIO(image_data))
+        except Exception:
+            return None
 
 
     def postprocess(self, inference_data, minimum_confidence=0.0):
@@ -110,6 +114,8 @@ class MetaformerHandler(BaseHandler, ABC):
         """
 
         imgbytes = self.preprocess(image_data)
+        if not imgbytes:
+            return [{'message': 'Waring: PIL could not open image'}]
         predictions = self.model(imgbytes)
         output = self.postprocess(predictions)
 
