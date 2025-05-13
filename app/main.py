@@ -1,22 +1,12 @@
 import os
 from typing import Union
 
-from pydantic import BaseModel
 from fastapi import FastAPI, File, UploadFile
 
 from .utils import read_yaml, dict_to_object
 from .metaformer.handler import MetaformerHandler
 
 from . import constants
-
-
-# Define the input model for FastAPI
-class ImgFeatures(BaseModel):
-    inputdata: str
-
-# Define the output model for FastAPI
-class PredictionResult(BaseModel):
-    outputdata: str
 
 
 app = FastAPI(redirect_slashes=False)
@@ -40,17 +30,17 @@ def read_item(item_id: int, q: Union[str, None] = None):
 
 
 # Use ../models/metaformer_config.yaml to get metaformer detials
-# @app.get("/metaformer")
-# def results():
-#    response = {"model": "metaformer", "version": None}
-#    config = read_yaml('app/metaformer/settings/config.yaml')
-#
-#    if config:
-#        config = dict_to_object(config)
-#        response["version"] = config.VERSION
-#        return response
-#    else:
-#        return response
+@app.get("/metaformer")
+def results():
+    response = {"model": "metaformer", "version": None}
+    config = read_yaml('../models/metaformer_config.yaml')
+    if config:
+        config = dict_to_object(config)
+        response["version"] = config.VERSION
+        print(config)
+        return response
+    else:
+        return response
 
 
 @app.post('/metaformer-predict')
@@ -66,6 +56,6 @@ async def predict_img(file: UploadFile = File(...)):
             return {'message': 'MetaFormer is not enabled.'}
 
     else:
-        return {'message': 'Image is not a bytearray.'}
+        return {'message': 'Warning: Image is not a bytearray.'}
 
     return output
