@@ -1,5 +1,9 @@
 fastapi[standard]==0.115.12
 
+onnxruntime
+psutil
+opencv-python
+
 # Metaformer requirements
 torch
 torchvision

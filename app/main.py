@@ -1,5 +1,6 @@
 import os
 from typing import Union
+import numpy as np
 
 from fastapi import FastAPI, File, UploadFile
 
@@ -29,7 +30,6 @@ def read_item(item_id: int, q: Union[str, None] = None):
     return {"item_id": item_id, "q": q}
 
 
-# Use ../models/metaformer_config.yaml to get metaformer detials
 @app.get("/metaformer")
 def results():
     response = {"model": "metaformer", "version": None}

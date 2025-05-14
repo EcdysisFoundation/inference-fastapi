@@ -1,7 +1,10 @@
 ############################
 ## Repo specific entries
 
-models/*.yaml
+models/*
+!.__init__.py
+*.onnx
+*.pt
 *.pth
 *.csv
 *.xlsx

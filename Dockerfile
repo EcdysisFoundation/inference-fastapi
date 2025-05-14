@@ -1,11 +1,12 @@
-FROM docker.io/python:3.12-slim as python
+FROM docker.io/python:3.12-slim AS python
+
+RUN python -m pip install --upgrade pip
 
 # build stage
-FROM python as python-build-stage
+FROM python AS python-build-stage
 
 COPY ./requirements.txt /code/requirements.txt
 
-#RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 RUN pip wheel --wheel-dir /usr/src/app/wheels -r /code/requirements.txt
 
 # run stage
