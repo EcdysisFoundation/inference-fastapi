@@ -2,7 +2,7 @@ fastapi[standard]==0.115.12
 
 onnxruntime
 psutil
-opencv-python
+opencv-python-headless
 
 # Metaformer requirements
 torch
