@@ -95,9 +95,6 @@ async def yolo_predict_img(file: UploadFile = File(...)):
             yolo_input_height,
             yolo_input_width,
             input_image.shape[:2])
-        for i in indices:
-            print('***********')
-            print(i)
         if YOLO_SAVE_IMG_LOCAL:
             img = input_image
             for i in indices:
