@@ -52,6 +52,8 @@ def format_yolo_output(detections):
 
 def prepare_img_foryolo(image_data):
 
+    # useful ?
+
     # Convert the file contents to a numpy array
     nparr = np.frombuffer(image_data, np.uint8)
     # Decode the numpy array as an image using cv2.imdecode

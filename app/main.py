@@ -1,13 +1,14 @@
-#import onnxruntime
+import onnxruntime as ort
 import os
-#import psutil
+import cv2
+import numpy as np
+from PIL import Image
 
 from fastapi import FastAPI, File, UploadFile
 
-from .utils import read_yaml, dict_to_object, prepare_img_foryolo
+from .utils import read_yaml, dict_to_object
 from .metaformer.handler import MetaformerHandler
-from .yolo_handler.onnx_object_detection import OnnxObjectDetection
-from .yolo_handler.images_input import Images
+from .yolo_handler.processing import preprocess, postprocess, draw_detections
 from . import constants
 
 
@@ -23,14 +24,16 @@ if all([os.path.exists(v) for v in constants.REQUIRED_PATHS_METAFORMER]):
 
 
 yolo_enabled = False
+YOLO_SAVE_IMG_LOCAL = True
 if all([os.path.exists(v) for v in constants.REQUIRED_PATHS_YOLO]):
-   #sess_options = onnxruntime.SessionOptions()
-    #sess_options.intra_op_num_threads = psutil.cpu_count(logical=True)
-    #yolo_net = onnxruntime.InferenceSession(
-    #    constants.PATH_YOLO_ONNX,
-    #    providers=(['CPUExecutionProvider']),
-    #    sess_options=sess_options)
-    yolo_handler = OnnxObjectDetection(weight_path=constants.PATH_YOLO_ONNX)
+    yolo_session = ort.InferenceSession(
+        constants.PATH_YOLO_ONNX,
+        providers=["CPUExecutionProvider"])
+    yolo_model_inputs = yolo_session.get_inputs()
+    yolo_model_name = yolo_model_inputs[0].name
+    yolo_input_shape = yolo_model_inputs[0].shape
+    yolo_input_width = yolo_input_shape[2]
+    yolo_input_height = yolo_input_shape[3]
     yolo_enabled = True
     print('yolo_enabled')
 
@@ -56,7 +59,7 @@ def results():
 @app.post('/metaformer-predict')
 async def predict_img(file: UploadFile = File(...)):
     # Test this with
-    # curl -X POST -F "file=@test/diabrotica.JPG" http://localhost:8070/metaformer-predict
+    # curl -X POST -F "file=@app/test/diabrotica.JPG" http://localhost:8070/metaformer-predict
     image_data = await file.read()
 
     if isinstance(image_data, (bytearray, bytes)):
@@ -74,25 +77,36 @@ async def predict_img(file: UploadFile = File(...)):
 @app.post('/yolo-predict')
 async def yolo_predict_img(file: UploadFile = File(...)):
     # file.file: A SpooledTemporaryFile object, which is a file-like object providing methods for reading and interacting with the file's content.
-    #image_data = await file.read()
     #print(file.filename)
     image_data = await file.read()
-    image_data = Images(images=Images.read_from_upload_file(file.filename, image_data))
     if yolo_enabled:
-        for i, batch in enumerate(image_data.create_batch(batch_size=1)):
-            raw_out = yolo_handler.predict_object_detection(
-                input_data=batch.to_onnx_input(image_size=yolo_handler.input_size))
-            batch.init_detected_objects(raw_out)
-
-            print(batch[0])
-
-        #img = prepare_img_foryolo(image_data)
-        #out = yolo_net.run(None, {'input': {'images': [img]}})
-        #print(out.shape)
-        #results = out[0]
-        #results = results.transpose()
-        #print(results.shape)
-
-
+        input_image = cv2.imdecode(
+            np.frombuffer(image_data, dtype=np.uint8),
+            cv2.IMREAD_COLOR)
+        # Get the height and width of the input image
+        image_data, pad = preprocess(
+            input_image,
+            yolo_input_width,
+            yolo_input_height)
+        outputs = yolo_session.run(None, {yolo_model_name: image_data})
+        indices = postprocess(
+            outputs,
+            pad,
+            yolo_input_height,
+            yolo_input_width,
+            input_image.shape[:2])
+        for i in indices:
+            print('***********')
+            print(i)
+        if YOLO_SAVE_IMG_LOCAL:
+            img = input_image
+            for i in indices:
+                img = draw_detections(
+                    img,
+                    i['box'],
+                    i['score'],
+                    i['class_id'])
+            img_w_boxes = Image.fromarray(img)
+            img_w_boxes.save('app/images/{0}'.format(file.filename))
 
     return {'message': 'working on it'}
