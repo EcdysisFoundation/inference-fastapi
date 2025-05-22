@@ -16,26 +16,26 @@ from . import constants
 app = FastAPI(redirect_slashes=False)
 
 
-metaformer_enabled = False
+METAFORMER_ENABLED = False
 if all([os.path.exists(v) for v in constants.REQUIRED_PATHS_METAFORMER]):
-    metaformer_handler = MetaformerHandler()
-    metaformer_handler.initialize()
-    metaformer_enabled = True
+    METAFORMER_HANDLER = MetaformerHandler()
+    METAFORMER_HANDLER.initialize()
+    METAFORMER_ENABLED = True
     print('metaformer_enabled')
 
 
-yolo_enabled = False
+YOLO_ENABLED = False
 YOLO_SAVE_IMG_LOCAL = False
 if all([os.path.exists(v) for v in constants.REQUIRED_PATHS_YOLO]):
-    yolo_session = ort.InferenceSession(
+    YOLO_SESSION = ort.InferenceSession(
         constants.PATH_YOLO_ONNX,
         providers=["CPUExecutionProvider"])
-    yolo_model_inputs = yolo_session.get_inputs()
-    yolo_model_name = yolo_model_inputs[0].name
-    yolo_input_shape = yolo_model_inputs[0].shape
-    yolo_input_width = yolo_input_shape[2]
-    yolo_input_height = yolo_input_shape[3]
-    yolo_enabled = True
+    yolo_model_inputs = YOLO_SESSION.get_inputs()
+    YOLO_MODEL_NAME = yolo_model_inputs[0].name
+    YOLO_INPUT_SHAPE = yolo_model_inputs[0].shape
+    YOLO_INPUT_WIDTH = YOLO_INPUT_SHAPE[2]
+    YOLO_INPUT_HEIGHT = YOLO_INPUT_SHAPE[3]
+    YOLO_ENABLED = True
     print('yolo_enabled')
 
 
@@ -64,8 +64,8 @@ async def predict_img(file: UploadFile = File(...)):
     image_data = await file.read()
 
     if isinstance(image_data, (bytearray, bytes)):
-        if metaformer_enabled:
-            output = metaformer_handler.handle(image_data)
+        if METAFORMER_ENABLED:
+            output = METAFORMER_HANDLER.handle(image_data)
         else:
             return {'message': 'MetaFormer is not enabled.'}
     else:
@@ -78,21 +78,21 @@ async def predict_img(file: UploadFile = File(...)):
 async def yolo_predict_img(file: UploadFile = File(...)):
     image_data = await file.read()
     result = {'message': 'Yolo is not enabled'}
-    if yolo_enabled:
+    if YOLO_ENABLED:
         input_image = cv2.imdecode(
             np.frombuffer(image_data, dtype=np.uint8),
             cv2.IMREAD_COLOR)
         image_shape = input_image.shape[:2]  # img_height, img_width
         image_data, pad = preprocess(
             input_image,
-            yolo_input_width,
-            yolo_input_height)
-        outputs = yolo_session.run(None, {yolo_model_name: image_data})
+            YOLO_INPUT_WIDTH,
+            YOLO_INPUT_HEIGHT)
+        outputs = YOLO_SESSION.run(None, {YOLO_MODEL_NAME: image_data})
         postprocesed = postprocess(
             outputs,
             pad,
-            yolo_input_height,
-            yolo_input_width,
+            YOLO_INPUT_HEIGHT,
+            YOLO_INPUT_WIDTH,
             image_shape)
         if YOLO_SAVE_IMG_LOCAL:
             img = input_image

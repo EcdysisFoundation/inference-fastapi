@@ -1,4 +1,4 @@
-# adapted to similar from
+# adapted for FastAPI, similar to
 # https://github.com/ultralytics/ultralytics/blob/main/examples/YOLOv8-ONNXRuntime/main.py
 
 import cv2
@@ -173,6 +173,8 @@ def get_detections(postprocesed: np.ndarray, image_shape: Tuple[int, int]) -> Li
             "height": i['box'][3],
             "rotation": 0,
             "rectanglelabels": [f"{YOLO_CLASSES[i['class_id']]}: {i['score']:.2f}"],
+            "classification": YOLO_CLASSES[i['class_id']],
+            "confidence": float(i['score']),
             "original_height": image_shape[0],
             "original_width": image_shape[1]
         } for i in postprocesed
