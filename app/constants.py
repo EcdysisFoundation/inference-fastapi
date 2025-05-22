@@ -10,7 +10,7 @@ REQUIRED_PATHS_METAFORMER = (
     PATH_METAFORMER_CONFIG
 )
 
-PATH_YOLO_ONNX = '/models/ecdyolo.onnx'
+PATH_YOLO_ONNX = '/models/yolo_best.onnx'
 PATH_YOLO_YAML = '/models/yolo_data.yaml'
 
 REQUIRED_PATHS_YOLO = (
