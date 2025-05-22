@@ -1,6 +1,7 @@
 # adapted for FastAPI, similar to
 # https://github.com/ultralytics/ultralytics/blob/main/examples/YOLOv8-ONNXRuntime/main.py
 
+import os
 import cv2
 import numpy as np
 from typing import List, Tuple
@@ -8,11 +9,15 @@ from typing import List, Tuple
 from .utils import YAML
 from .. import constants
 
-# Load the class names formated to the COCO dataset format
-YOLO_CLASSES = YAML.load('..' + constants.PATH_YOLO_YAML)["names"]
+if all([os.path.exists(v) for v in constants.REQUIRED_PATHS_YOLO]):
+    # Load the class names formated to the COCO dataset format
+    YOLO_CLASSES = YAML.load('..' + constants.PATH_YOLO_YAML)["names"]
 
-# Generate a color palette for the classes
-YOLO_COLOR_PALETTE = np.random.uniform(0, 255, size=(len(YOLO_CLASSES), 3))
+    # Generate a color palette for the classes
+    YOLO_COLOR_PALETTE = np.random.uniform(0, 255, size=(len(YOLO_CLASSES), 3))
+else:
+      YOLO_CLASSES = ['None']
+      YOLO_COLOR_PALETTE = [[252, 186, 3]]
 
 
 def letterbox(img: np.ndarray, new_shape: Tuple[int, int] = (640, 640)) -> Tuple[np.ndarray, Tuple[int, int]]:
