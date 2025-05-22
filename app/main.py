@@ -8,7 +8,8 @@ from fastapi import FastAPI, File, UploadFile
 
 from .utils import read_yaml, dict_to_object
 from .metaformer.handler import MetaformerHandler
-from .yolo_handler.processing import preprocess, postprocess, draw_detections
+from .yolo_handler.processing import (
+    preprocess, postprocess, draw_detections, get_detections)
 from . import constants
 
 
@@ -24,7 +25,7 @@ if all([os.path.exists(v) for v in constants.REQUIRED_PATHS_METAFORMER]):
 
 
 yolo_enabled = False
-YOLO_SAVE_IMG_LOCAL = True
+YOLO_SAVE_IMG_LOCAL = False
 if all([os.path.exists(v) for v in constants.REQUIRED_PATHS_YOLO]):
     yolo_session = ort.InferenceSession(
         constants.PATH_YOLO_ONNX,
@@ -67,7 +68,6 @@ async def predict_img(file: UploadFile = File(...)):
             output = metaformer_handler.handle(image_data)
         else:
             return {'message': 'MetaFormer is not enabled.'}
-
     else:
         return {'message': 'Warning: Image is not a bytearray.'}
 
@@ -76,28 +76,27 @@ async def predict_img(file: UploadFile = File(...)):
 
 @app.post('/yolo-predict')
 async def yolo_predict_img(file: UploadFile = File(...)):
-    # file.file: A SpooledTemporaryFile object, which is a file-like object providing methods for reading and interacting with the file's content.
-    #print(file.filename)
     image_data = await file.read()
+    result = {'message': 'Yolo is not enabled'}
     if yolo_enabled:
         input_image = cv2.imdecode(
             np.frombuffer(image_data, dtype=np.uint8),
             cv2.IMREAD_COLOR)
-        # Get the height and width of the input image
+        image_shape = input_image.shape[:2]  # img_height, img_width
         image_data, pad = preprocess(
             input_image,
             yolo_input_width,
             yolo_input_height)
         outputs = yolo_session.run(None, {yolo_model_name: image_data})
-        indices = postprocess(
+        postprocesed = postprocess(
             outputs,
             pad,
             yolo_input_height,
             yolo_input_width,
-            input_image.shape[:2])
+            image_shape)
         if YOLO_SAVE_IMG_LOCAL:
             img = input_image
-            for i in indices:
+            for i in postprocesed:
                 img = draw_detections(
                     img,
                     i['box'],
@@ -105,5 +104,5 @@ async def yolo_predict_img(file: UploadFile = File(...)):
                     i['class_id'])
             img_w_boxes = Image.fromarray(img)
             img_w_boxes.save('app/images/{0}'.format(file.filename))
-
-    return {'message': 'working on it'}
+        result = get_detections(postprocesed, image_shape)
+    return result

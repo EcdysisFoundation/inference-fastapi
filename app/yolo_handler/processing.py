@@ -4,7 +4,6 @@
 import cv2
 import numpy as np
 from typing import List, Tuple
-from PIL import Image
 
 from .utils import YAML
 from .. import constants
@@ -69,7 +68,7 @@ def preprocess(input_image, input_width, input_height):
         return image_data, pad
 
 
-def postprocess(output: List[np.ndarray], pad: Tuple[int, int], input_height, input_width, img_shape) -> np.ndarray:
+def postprocess(output: List[np.ndarray], pad: Tuple[int, int], input_height, input_width, img_shape: Tuple[int, int]) -> np.ndarray:
         confidence_threshold = 0.5
         iou_threshold = 0.5
         #get height width
@@ -123,7 +122,7 @@ def postprocess(output: List[np.ndarray], pad: Tuple[int, int], input_height, in
         return [{'box': boxes[i], 'score': scores[i], 'class_id': class_ids[i]} for i in indices]
 
 
-def draw_detections(img: np.ndarray, box: List[float], score: float, class_id: int) -> None:
+def draw_detections(img: np.ndarray, box: List[float], score: float, class_id: int) -> np.ndarray:
         """
         Draw bounding boxes and labels on the input image based on the detected objects.
 
@@ -162,3 +161,19 @@ def draw_detections(img: np.ndarray, box: List[float], score: float, class_id: i
         cv2.putText(img, label, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
 
         return img
+
+
+def get_detections(postprocesed: np.ndarray, image_shape: Tuple[int, int]) -> List:
+    # format to Label-Studio and bugbox.sampels.models.SpecimenImage.object_det_label
+    return [
+        {
+            "x": i['box'][0],
+            "y": i['box'][1],
+            "width": i['box'][2],
+            "height": i['box'][3],
+            "rotation": 0,
+            "rectanglelabels": [f"{YOLO_CLASSES[i['class_id']]}: {i['score']:.2f}"],
+            "original_height": image_shape[0],
+            "original_width": image_shape[1]
+        } for i in postprocesed
+    ]
