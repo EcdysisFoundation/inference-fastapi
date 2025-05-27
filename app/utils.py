@@ -29,9 +29,6 @@ def dict_to_object(data):
 def format_yolo_output(detections):
 
     # Extract bounding box data
-    print(detections[0].boxes.xyxy)
-    print(detections[0].boxes.conf)
-    print(detections[0].boxes.cls)
     boxes = detections[0].boxes.xyxy.cpu().numpy()
     scores = detections[0].boxes.conf.cpu().numpy()
     classes = detections[0].boxes.cls.cpu().numpy()

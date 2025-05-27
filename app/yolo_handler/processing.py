@@ -12,6 +12,7 @@ from .. import constants
 if all([os.path.exists(v) for v in constants.REQUIRED_PATHS_YOLO]):
     # Load the class names formated to the COCO dataset format
     YOLO_CLASSES = YAML.load('..' + constants.PATH_YOLO_YAML)["names"]
+    YOLO_MODEL_VERSION = YAML.load('..' + constants.PATH_YOLO_YAML)["version"]
 
     # Generate a color palette for the classes
     YOLO_COLOR_PALETTE = np.random.uniform(0, 255, size=(len(YOLO_CLASSES), 3))
@@ -181,6 +182,7 @@ def get_detections(postprocesed: np.ndarray, image_shape: Tuple[int, int]) -> Li
             "classification": YOLO_CLASSES[i['class_id']],
             "confidence": float(i['score']),
             "original_height": image_shape[0],
-            "original_width": image_shape[1]
+            "original_width": image_shape[1],
+            "model_version": YOLO_MODEL_VERSION
         } for i in postprocesed
     ]

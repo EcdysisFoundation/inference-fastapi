@@ -9,7 +9,7 @@ from fastapi import FastAPI, File, UploadFile
 from .utils import read_yaml, dict_to_object
 from .metaformer.handler import MetaformerHandler
 from .yolo_handler.processing import (
-    preprocess, postprocess, draw_detections, get_detections)
+    preprocess, postprocess, draw_detections, get_detections, YAML)
 from . import constants
 
 
@@ -20,6 +20,7 @@ METAFORMER_ENABLED = False
 if all([os.path.exists(v) for v in constants.REQUIRED_PATHS_METAFORMER]):
     METAFORMER_HANDLER = MetaformerHandler()
     METAFORMER_HANDLER.initialize()
+    METAFORMER_CONFIG = read_yaml('..' + constants.PATH_METAFORMER_CONFIG)
     METAFORMER_ENABLED = True
     print('metaformer_enabled')
 
@@ -47,9 +48,8 @@ def read_root():
 @app.get("/metaformer")
 def results():
     response = {"model": "metaformer", "version": None}
-    config = read_yaml('../models/metaformer_config.yaml')
-    if config:
-        config = dict_to_object(config)
+    if METAFORMER_CONFIG:
+        config = dict_to_object(METAFORMER_CONFIG)
         response["version"] = config.VERSION
         print(config)
         return response
