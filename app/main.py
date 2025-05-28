@@ -75,6 +75,16 @@ async def predict_img(file: UploadFile = File(...)):
     return output
 
 
+@app.get("/yolo")
+def yolo_model():
+    response = {"model": "yolo", "version": None}
+    if YOLO_ENABLED:
+        response["version"] = YOLO_MODEL_VERSION
+        return response
+    else:
+        return response
+
+
 @app.post('/yolo-predict')
 async def yolo_predict_img(file: UploadFile = File(...)):
     image_data = await file.read()
