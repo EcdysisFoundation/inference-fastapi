@@ -36,6 +36,7 @@ if all([os.path.exists(v) for v in constants.REQUIRED_PATHS_YOLO]):
     YOLO_INPUT_SHAPE = yolo_model_inputs[0].shape
     YOLO_INPUT_WIDTH = YOLO_INPUT_SHAPE[2]
     YOLO_INPUT_HEIGHT = YOLO_INPUT_SHAPE[3]
+    YOLO_MODEL_VERSION = YAML.load('..' + constants.PATH_YOLO_YAML)["version"]
     YOLO_ENABLED = True
     print('yolo_enabled')
 
@@ -105,4 +106,7 @@ async def yolo_predict_img(file: UploadFile = File(...)):
             img_w_boxes = Image.fromarray(img)
             img_w_boxes.save('app/images/{0}'.format(file.filename))
         result = get_detections(postprocesed, image_shape)
+        if not result:
+            # provide model version for response with no detections.
+            result = [{"model_version": YOLO_MODEL_VERSION}]
     return result
