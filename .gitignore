@@ -12,6 +12,7 @@ models/*
 .DS_Store
 app/images/*
 !app/images/__init__.py
+local_files
 
 ############################
 
