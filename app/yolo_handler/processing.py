@@ -171,18 +171,26 @@ def draw_detections(img: np.ndarray, box: List[float], score: float, class_id: i
 
 def get_detections(postprocesed: np.ndarray, image_shape: Tuple[int, int]) -> List:
     # format to Label-Studio and bugbox.sampels.models.SpecimenImage.object_det_label
+    # converts pixels to percentages
+    # x1, y1, w, h = box
+    x = 0
+    y = 1
+    w = 2
+    h = 3
+    original_height = image_shape[0]
+    original_width = image_shape[1]
     return [
         {
-            "x": i['box'][0],
-            "y": i['box'][1],
-            "width": i['box'][2],
-            "height": i['box'][3],
+            "x": i['box'][x] / original_width * 100,
+            "y": i['box'][y] / original_height * 100 ,
+            "width": i['box'][w] / original_width * 100,
+            "height": i['box'][h] / original_height * 100,
             "rotation": 0,
             "rectanglelabels": [f"{YOLO_CLASSES[i['class_id']]}: {i['score']:.2f}"],
             "classification": YOLO_CLASSES[i['class_id']],
             "confidence": float(i['score']),
-            "original_height": image_shape[0],
-            "original_width": image_shape[1],
+            "original_height": original_height,
+            "original_width": original_width,
             "model_version": YOLO_MODEL_VERSION
         } for i in postprocesed
     ]
