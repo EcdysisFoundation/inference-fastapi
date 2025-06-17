@@ -39,7 +39,8 @@ class MetaformerHandler(BaseHandler, ABC):
     def preprocess(self, image_data):
 
         try:
-            return Image.open(io.BytesIO(image_data))
+            img = Image.open(io.BytesIO(image_data))
+            return img.convert("RGB")
         except Exception:
             return None
 
