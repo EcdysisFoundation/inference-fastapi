@@ -8,6 +8,10 @@ services:
       dockerfile: ./Dockerfile
     image: mikaylaelectra/fastapi
     container_name: fastapi
+    deploy:
+      resources:
+        limits:
+          memory: 20g
     volumes:
       - models:/models
       - ./app:/code/app
