@@ -103,7 +103,7 @@ class MetaformerInferencer:
         transform = v2.Compose([
             SquarePad(image_size),
             v2.Resize((image_size, image_size), interpolation=InterpolationMode.BILINEAR),
-            v2.ToTensor(),
+            v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)]),
             v2.Normalize(imagenet_default_mean, imagenet_default_std)
         ])
 
