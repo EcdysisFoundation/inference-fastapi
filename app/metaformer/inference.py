@@ -6,13 +6,31 @@ from typing import Union
 import torch
 from PIL import Image
 from torch.nn import Softmax
-from torchvision.transforms import transforms, InterpolationMode
+from torchvision.transforms import v2, functional, InterpolationMode
 from yacs.config import CfgNode
 
 from .build import build_model
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+class SquarePad(v2.Transform):
+    def __init__(self, config_img_size):
+        super(SquarePad, self).__init__()
+        self.config_img_size = config_img_size
+
+    def transform(self, image, params):
+        w, h = image.size
+        # Determine the size of the square canvas
+        square_size = max(w, h)
+        # prevent upsizing the original image
+        if square_size < self.config_img_size:
+            square_size = self.config_img_size
+        hp = int((square_size - w) / 2)
+        vp = int((square_size - h) / 2)
+        padding = (hp, vp, hp, vp)  # left, top, right, bottom
+        return functional.pad(image, padding, fill=0, padding_mode='constant')
 
 
 class MetaformerInferencer:
@@ -38,7 +56,6 @@ class MetaformerInferencer:
             self._config = CfgNode.load_cfg(open(value, "r"))
         else:
             raise ValueError('Type of config must be either yacs.config.CfgNode or pathlib.Path')
-
 
     @property
     def output_function(self) -> callable:
@@ -83,10 +100,11 @@ class MetaformerInferencer:
 
         image_size = self.config.DATA.IMG_SIZE
 
-        transform = transforms.Compose([
-            transforms.Resize((image_size, image_size), interpolation=InterpolationMode.BILINEAR),
-            transforms.ToTensor(),
-            transforms.Normalize(imagenet_default_mean, imagenet_default_std)
+        transform = v2.Compose([
+            SquarePad(image_size),
+            v2.Resize((image_size, image_size), interpolation=InterpolationMode.BILINEAR),
+            v2.ToTensor(),
+            v2.Normalize(imagenet_default_mean, imagenet_default_std)
         ])
 
         return transform

@@ -38,23 +38,7 @@ class MetaformerHandler(BaseHandler, ABC):
 
         try:
             img = Image.open(io.BytesIO(image_data))
-            img = img.convert("RGB")
-            # square the image
-            width, height = img.size
-            # Determine the size of the square canvas
-            square_size = max(width, height)
-            # prevent upsizing the original image later on
-            if square_size < self.model.config.DATA.IMG_SIZE:
-                square_size = self.model.config.DATA.IMG_SIZE
-            # Create a new square image with the background color (0, 0, 0)
-            new_img = Image.new(img.mode, (square_size, square_size), (0, 0, 0))
-            # Calculate the paste position to center the original image
-            paste_x = (square_size - width) // 2
-            paste_y = (square_size - height) // 2
-            # Paste the original image onto the new square canvas
-            new_img.paste(img, (paste_x, paste_y))
-            img.close()
-            return new_img
+            return img.convert("RGB")
 
         except Exception:
             return None
