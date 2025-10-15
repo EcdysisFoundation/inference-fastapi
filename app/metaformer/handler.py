@@ -39,6 +39,7 @@ class MetaformerHandler(BaseHandler, ABC):
         try:
             img = Image.open(io.BytesIO(image_data))
             img = img.convert("RGB")
+            return img ## disable padding in preprocess
             # square the image
             width, height = img.size
             # Determine the size of the square canvas
