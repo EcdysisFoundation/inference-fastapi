@@ -6,8 +6,7 @@ from typing import Union
 import torch
 from PIL import Image
 from torch.nn import Softmax
-from torchvision.transforms import transforms, InterpolationMode
-import torchvision.transforms.functional as F
+from torchvision.transforms import v2, functional, InterpolationMode
 from yacs.config import CfgNode
 
 from .build import build_model
@@ -16,21 +15,22 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class SquarePad(torch.nn.Module):
-    def forward(self, image):
+class SquarePad(v2.Transform):
+    def __init__(self, config_img_size):
+        super(SquarePad, self).__init__()
+        self.config_img_size = config_img_size
+
+    def transform(self, image, params):
         w, h = image.size
         # Determine the size of the square canvas
         square_size = max(w, h)
         # prevent upsizing the original image
-        #if square_size < self.model.config.DATA.IMG_SIZE:
-        #    square_size = self.model.config.DATA.IMG_SIZE
-        #    print('USING MINIMUM')
-        #    print(square_size)
+        if square_size < self.config_img_size:
+            square_size = self.config_img_size
         hp = int((square_size - w) / 2)
         vp = int((square_size - h) / 2)
         padding = (hp, vp, hp, vp)  # left, top, right, bottom
-        #print(padding)
-        return F.pad(image, padding, fill=0, padding_mode='constant')
+        return functional.pad(image, padding, fill=0, padding_mode='constant')
 
 
 class MetaformerInferencer:
@@ -100,11 +100,11 @@ class MetaformerInferencer:
 
         image_size = self.config.DATA.IMG_SIZE
 
-        transform = transforms.Compose([
-            SquarePad(),
-            transforms.Resize((image_size, image_size), interpolation=InterpolationMode.BILINEAR),
-            transforms.ToTensor(),
-            transforms.Normalize(imagenet_default_mean, imagenet_default_std)
+        transform = v2.Compose([
+            SquarePad(image_size),
+            v2.Resize((image_size, image_size), interpolation=InterpolationMode.BILINEAR),
+            v2.ToTensor(),
+            v2.Normalize(imagenet_default_mean, imagenet_default_std)
         ])
 
         return transform
