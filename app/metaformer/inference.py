@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Union
 
 import torch
+from timm.data import create_transform
 from PIL import Image
 from torch.nn import Softmax
 from torchvision.transforms import v2, functional, InterpolationMode
@@ -16,6 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 class SquarePad(v2.Transform):
+    """
+    Optional custom transform with padding.
+    """
     def __init__(self, config_img_size):
         super(SquarePad, self).__init__()
         self.config_img_size = config_img_size
@@ -73,7 +77,6 @@ class MetaformerInferencer:
         else:
             raise ValueError('output_func must be either None or "softmax"')
 
-
     def build(self, config: Union[Path, CfgNode], checkpoint: Path, output_function: str = None):
         """
         Build pipeline to perform inference
@@ -89,12 +92,29 @@ class MetaformerInferencer:
 
     def make_transform(self):
         """
-        Create image transformation as in training. The transformation is a composition of Resizing to model's input
-        image size -> Conversion to torch tensor -> Normalization using Imagenet's mean and std.
+        Create image transformation as in training evalution, see metaformer_ecdysis.data.build.py.
 
         Returns: Transformation callable
         """
 
+        transform = create_transform(
+            input_size=self.config.DATA.IMG_SIZE,
+            is_training=False,
+            color_jitter=self.config.AUG.COLOR_JITTER if self.config.AUG.COLOR_JITTER > 0 else None,
+            auto_augment=self.config.AUG.AUTO_AUGMENT if self.config.AUG.AUTO_AUGMENT != 'none' else None,
+            re_prob=self.config.AUG.REPROB,
+            re_mode=self.config.AUG.REMODE,
+            re_count=self.config.AUG.RECOUNT,
+            interpolation='bilinear',
+            train_crop_mode='rkrc',
+            crop_mode='border'
+        )
+        return transform
+
+    def make_tranform_custom(self):
+        """
+        Optional custom transform.
+        """
         imagenet_default_mean = (0.485, 0.456, 0.406)
         imagenet_default_std = (0.229, 0.224, 0.225)
 
