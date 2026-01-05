@@ -6,7 +6,6 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: mikaylaelectra/fastapi
     container_name: fastapi
     deploy:
       resources:

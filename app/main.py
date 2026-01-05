@@ -22,7 +22,9 @@ if all([os.path.exists(v) for v in constants.REQUIRED_PATHS_METAFORMER]):
     METAFORMER_HANDLER.initialize()
     METAFORMER_CONFIG = read_yaml('..' + constants.PATH_METAFORMER_CONFIG)
     METAFORMER_ENABLED = True
-    print('metaformer_enabled')
+    print('metaformer enabled')
+else:
+    print('metaformer is not enabled')
 
 
 YOLO_ENABLED = False
@@ -38,7 +40,9 @@ if all([os.path.exists(v) for v in constants.REQUIRED_PATHS_YOLO]):
     YOLO_INPUT_HEIGHT = YOLO_INPUT_SHAPE[3]
     YOLO_MODEL_VERSION = YAML.load('..' + constants.PATH_YOLO_YAML)["version"]
     YOLO_ENABLED = True
-    print('yolo_enabled')
+    print('yolo enabled')
+else:
+    print('yolo is not enabled')
 
 
 @app.get("/")
