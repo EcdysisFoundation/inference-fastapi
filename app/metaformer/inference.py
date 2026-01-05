@@ -152,4 +152,3 @@ def load_mapping(map_file: Path):
         next(f)  # Skip header, note expected order
         mapping = {morphospecies_id: morphospecies_name for morphospecies_id, morphospecies_name in csv.reader(f)}
         return mapping
-
